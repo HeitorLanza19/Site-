@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="https://i.imgur.com/YjcMDOt.png" sizes="32x32">
-    <title>Foco Pomodoro</title>
+    <title>Timer</title>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -13,7 +13,9 @@
             --card-border: rgba(255, 255, 255, 0.1);
             --text-color: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.6);
-            --accent-color: #ff6b6b;
+            --accent-color: #f28b8b;
+            --accent-light: #fbd0d0;
+            --accent-dark: #bd5555;
             --btn-start-bg: #ffffff;
             --btn-start-text: #1a1a1a;
             --bg-grad-1: #2c252d;
@@ -33,6 +35,85 @@
             min-height: 100vh;
             box-sizing: border-box;
             transition: background 0.8s ease;
+            animation: page-enter 0.7s ease both;
+        }
+
+        @keyframes page-enter {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes container-enter {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes panel-enter {
+            from {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes panel-exit {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.96);
+            }
+        }
+
+        @keyframes tab-enter {
+            from {
+                opacity: 0;
+                transform: translateX(32px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes todo-add {
+            from {
+                opacity: 0;
+                max-height: 0;
+                margin-bottom: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                transform: translateY(-12px) scale(0.96);
+            }
+
+            to {
+                opacity: 1;
+                max-height: 500px;
+                margin-bottom: 10px;
+                padding-top: 14px;
+                padding-bottom: 14px;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .outer-wrapper {
@@ -87,6 +168,16 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             padding: 14px;
             box-sizing: border-box;
+        }
+
+        .color-panel.is-open {
+            animation: panel-enter 0.2s ease both;
+            transform-origin: top right;
+        }
+
+        .color-panel.is-closing {
+            animation: panel-exit 0.18s ease both;
+            transform-origin: top right;
         }
 
         .color-wheel-wrap {
@@ -149,6 +240,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            animation: container-enter 0.7s 0.08s ease both;
         }
 
         .tabs {
@@ -160,6 +252,22 @@
             padding: 6px;
             border-radius: 14px;
             box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-indicator {
+            position: absolute;
+            top: 6px;
+            left: 0;
+            height: calc(100% - 12px);
+            border-radius: 10px;
+            background: var(--accent-color);
+            pointer-events: none;
+            z-index: 0;
+            transition: transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1),
+                background-color 0.3s ease;
+            will-change: transform;
         }
 
         .tab-btn {
@@ -174,6 +282,32 @@
             border-radius: 10px;
             text-align: center;
             transition: all 0.2s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tab-btn {
+            animation: page-enter 0.5s ease both;
+        }
+
+        .tab-btn:nth-child(2) {
+            animation-delay: 0.08s;
+        }
+
+        .tab-btn:nth-child(3) {
+            animation-delay: 0.16s;
+        }
+
+        .tab-btn:nth-child(4) {
+            animation-delay: 0.24s;
+        }
+
+        #tab-t {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #tab-t.active {
+            color: #ffffff;
         }
 
         .tab-btn:hover {
@@ -183,7 +317,7 @@
 
         .tab-btn.active {
             color: #ffffff;
-            background: var(--accent-color);
+            background: transparent;
             font-weight: 600;
         }
 
@@ -225,7 +359,7 @@
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--card-border);
             border-radius: 14px;
-            color: var(--text-color);
+            color: var(--accent-dark);
             font-size: 46px;
             font-weight: 600;
             text-align: center;
@@ -234,10 +368,37 @@
             transition: all 0.2s ease;
         }
 
+        .inputs-container input::placeholder {
+            color: var(--accent-dark);
+            opacity: 1;
+        }
+
         .inputs-container input:focus {
             outline: none;
             border-color: var(--accent-color);
             background: rgba(0, 0, 0, 0.4);
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff;
+        }
+
+        .inputs-container input.number-selected {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        .inputs-container input.number-has-value {
+            color: #ffffff;
+            -webkit-text-fill-color: #ffffff;
+        }
+
+        .inputs-container input.number-selected::placeholder {
+            color: #ffffff;
+            opacity: 1;
+        }
+
+        .inputs-container input::selection {
+            background: var(--accent-color);
+            color: #ffffff !important;
         }
 
         .inputs-container label {
@@ -271,13 +432,20 @@
             filter: brightness(1.1);
         }
 
+        .btn-focus,
+        .btn-add,
+        .todo-item,
+        .editor-toolbar,
+        .notes-editor {
+            animation: page-enter 0.45s ease both;
+        }
+
         .btn-focus:active {
             transform: translateY(0px);
         }
 
         .btn-start {
-            background: #ffffff;
-            background: color-mix(in srgb, var(--accent-color) 35%, white);
+            background: var(--accent-light);
             color: #1a1a1a;
             box-shadow: 0 10px 25px rgba(255, 255, 255, 0.05);
         }
@@ -311,6 +479,20 @@
 
         .hidden {
             display: none !important;
+        }
+
+        .tab-stage {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            transition: height 0.38s ease;
+        }
+
+        .tab-slide-layer {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            width: 100% !important;
         }
 
         .scroll-box {
@@ -351,6 +533,32 @@
             width: 100%;
         }
 
+        .todo-heading {
+            margin: 0 0 16px;
+            color: var(--text-color);
+            font-size: 22px;
+            font-weight: 700;
+            text-align: left;
+            caret-color: #ffffff;
+        }
+
+        #todo-sec .input-group input {
+            background: rgba(0, 0, 0, 0.32);
+            border: 2px solid color-mix(in srgb, var(--accent-color) 42%, transparent);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        #todo-sec .input-group input::placeholder {
+            color: var(--accent-color);
+            opacity: 0.85;
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
         .input-group input {
             flex: 1;
             background: rgba(0, 0, 0, 0.2);
@@ -369,7 +577,7 @@
 
         .btn-add {
             background: var(--accent-color);
-            background: color-mix(in srgb, var(--accent-color) 35%, white);
+            background: var(--accent-light);
             color: #000;
             font-weight: 700;
             padding: 0 20px;
@@ -391,12 +599,20 @@
             margin-bottom: 10px;
             border: 1px solid rgba(255, 255, 255, 0.02);
             box-sizing: border-box;
+            gap: 12px;
+        }
+
+        .todo-item.todo-adding {
+            animation: todo-add 0.35s ease both;
+            overflow: hidden;
         }
 
         .todo-left {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex: 1;
+            min-width: 0;
         }
 
         .todo-left input {
@@ -404,11 +620,49 @@
             height: 16px;
             accent-color: var(--accent-color);
             cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .todo-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .todo-text {
+            word-break: break-word;
+        }
+
+        .todo-timer {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .todo-item.done .todo-text {
             text-decoration: line-through;
             color: var(--text-secondary);
+        }
+
+        .todo-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .todo-timer-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         .btn-del {
@@ -466,6 +720,17 @@
             text-align: left;
         }
 
+        .notes-editor.is-empty::before {
+            content: "Escreva o que quiser com formatação automática";
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+        }
+
+        .notes-editor.is-empty:focus::before {
+            display: none;
+        }
+
         .notes-editor:focus {
             outline: none;
             border-color: rgba(255, 255, 255, 0.2);
@@ -483,6 +748,17 @@
             text-align: right;
             margin-top: 8px;
             font-style: italic;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+            }
         }
     </style>
 </head>
@@ -504,68 +780,85 @@
 
         <div class="container">
             <div class="tabs">
+                <div class="tab-indicator" id="tabIndicator" aria-hidden="true"></div>
                 <button class="tab-btn active" id="tab-c" onclick="swTab('cronometro')">Cronômetro</button>
                 <button class="tab-btn" id="tab-t" onclick="swTab('timer')">Temporizador</button>
                 <button class="tab-btn" id="tab-todo" onclick="swTab('todo')">Tarefas</button>
                 <button class="tab-btn" id="tab-notes" onclick="swTab('notes')">Notas</button>
             </div>
 
-            <!-- SEÇÃO CRONÔMETRO -->
-            <div id="c-sec" style="width: 100%; text-align: center;">
-                <div class="display-container">
-                    <div class="display" id="c-display">00:00<small>.00</small></div>
+            <div class="tab-stage" id="tabStage">
+                <!-- SEÇÃO CRONÔMETRO -->
+                <div id="c-sec" class="tab-section" style="width: 100%; text-align: center;">
+                    <div class="display-container">
+                        <div class="display" id="c-display">00:00<small>.00</small></div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn-focus btn-reset" id="c-lap-btn" onclick="recordLap()">Volta</button>
+                        <button class="btn-focus btn-start" id="c-start" onclick="startC()">Iniciar</button>
+                        <button class="btn-focus btn-pause hidden" id="c-pause" onclick="pauseC()">Pausar</button>
+                    </div>
+                    <div class="scroll-box" id="lapsContainer"></div>
                 </div>
-                <div class="controls">
-                    <button class="btn-focus btn-reset" id="c-lap-btn" onclick="recordLap()">Volta</button>
-                    <button class="btn-focus btn-start" id="c-start" onclick="startC()">Iniciar</button>
-                    <button class="btn-focus btn-pause hidden" id="c-pause" onclick="pauseC()">Pausar</button>
-                </div>
-                <div class="scroll-box" id="lapsContainer"></div>
-            </div>
 
-            <!-- SEÇÃO TEMPORIZADOR -->
-            <div id="t-sec" class="hidden" style="width: 100%; text-align: center;">
-                <div class="inputs-container" id="t-inputs">
-                    <input type="number" id="t-hr" min="0" placeholder="00" oninput="limitL(this)"><label>h</label>
-                    <input type="number" id="t-min" min="0" placeholder="05" oninput="limitL(this)"><label>m</label>
-                    <input type="number" id="t-seg" min="0" placeholder="00" oninput="limitL(this)"><label>s</label>
+                <!-- SEÇÃO TEMPORIZADOR -->
+                <div id="t-sec" class="tab-section hidden" style="width: 100%; text-align: center;">
+                    <div class="inputs-container" id="t-inputs">
+                        <input type="number" id="t-hr" min="0" placeholder="00"
+                            oninput="limitL(this); updateTimerNumberColor(this)"
+                            onfocus="this.classList.add('number-selected')"
+                            onblur="this.classList.remove('number-selected')"><label>h</label>
+                        <input type="number" id="t-min" min="0" placeholder="00"
+                            oninput="limitL(this); updateTimerNumberColor(this)"
+                            onfocus="this.classList.add('number-selected')"
+                            onblur="this.classList.remove('number-selected')"><label>m</label>
+                        <input type="number" id="t-seg" min="0" placeholder="00"
+                            oninput="limitL(this); updateTimerNumberColor(this)"
+                            onfocus="this.classList.add('number-selected')"
+                            onblur="this.classList.remove('number-selected')"><label>s</label>
+                    </div>
+                    <div class="display-container hidden" id="t-disp-box">
+                        <div class="display" id="t-display">00:05:00</div>
+                    </div>
+                    <button class="btn-stop-alarm hidden" id="stopAlarmBtn" onclick="stopAlarm()">Parar Alarme</button>
+                    <div class="controls" id="t-controls-div">
+                        <button class="btn-focus btn-reset" onclick="resetT()">Cancelar</button>
+                        <button class="btn-focus btn-start" id="t-start" onclick="startT()">Iniciar</button>
+                        <button class="btn-focus btn-pause hidden" id="t-pause" onclick="pauseT()">Pausar</button>
+                    </div>
                 </div>
-                <div class="display-container hidden" id="t-disp-box">
-                    <div class="display" id="t-display">00:05:00</div>
-                </div>
-                <button class="btn-stop-alarm hidden" id="stopAlarmBtn" onclick="stopAlarm()">Parar Alarme</button>
-                <div class="controls" id="t-controls-div">
-                    <button class="btn-focus btn-reset" onclick="resetT()">Cancelar</button>
-                    <button class="btn-focus btn-start" id="t-start" onclick="startT()">Iniciar</button>
-                    <button class="btn-focus btn-pause hidden" id="t-pause" onclick="pauseT()">Pausar</button>
-                </div>
-            </div>
 
-            <!-- SEÇÃO TAREFAS -->
-            <div id="todo-sec" class="hidden" style="width: 100%;">
-                <div class="input-group">
-                    <input type="text" id="todoInput" placeholder="O que vamos fazer agora?">
-                    <button class="btn-add" onclick="addTodo()">+</button>
+                <!-- SEÇÃO TAREFAS -->
+                <div id="todo-sec" class="tab-section hidden" style="width: 100%;">
+                    <h2 class="todo-heading">Lista de tarefas</h2>
+                    <div class="input-group">
+                        <input type="text" id="todoInput" placeholder="O que vamos fazer agora?">
+                        <button class="btn-add" onclick="addTodo()">+</button>
+                    </div>
+                    <div class="scroll-box" id="todoContainer"></div>
                 </div>
-                <div class="scroll-box" id="todoContainer"></div>
-            </div>
 
-            <!-- SEÇÃO NOTAS ESTILO WORD -->
-            <div id="notes-sec" class="hidden" style="width: 100%;">
-                <div class="editor-toolbar">
-                    <button class="editor-btn" onclick="execCmd('bold')">B</button>
-                    <button class="editor-btn" onclick="execCmd('italic')"><i>I</i></button>
-                    <button class="editor-btn" onclick="execCmd('underline')"><u>U</u></button>
-                    <button class="editor-btn" type="button" onmousedown="event.preventDefault()"
-                        onclick="deletePreviousCharacter()" title="Apagar caractere anterior"
-                        aria-label="Apagar caractere anterior">⬅</button>
-                    <button class="editor-btn" onclick="execCmd('justifyCenter')">Direct</button>
-                    <button class="editor-btn" onclick="execCmd('insertUnorderedList')">• Lista</button>
-                    <button class="editor-btn" type="button" onmousedown="event.preventDefault()" onclick="clearNotes()"
-                        title="Limpar Tudo" aria-label="Limpar Tudo">Limpar Tudo</button>
+                <!-- SEÇÃO NOTAS ESTILO WORD -->
+                <div id="notes-sec" class="tab-section hidden" style="width: 100%;">
+                    <div class="editor-toolbar">
+                        <button class="editor-btn" onclick="execCmd('bold')">B</button>
+                        <button class="editor-btn" onclick="execCmd('italic')"><i>I</i></button>
+                        <button class="editor-btn" onclick="execCmd('underline')"><u>U</u></button>
+                        <button class="editor-btn" type="button" onmousedown="event.preventDefault()"
+                            onclick="deletePreviousCharacter()" title="Apagar caractere anterior"
+                            aria-label="Apagar caractere anterior">⬅</button>
+                        <button class="editor-btn" onclick="execCmd('justifyCenter')">Direct</button>
+                        <button class="editor-btn" onclick="execCmd('insertUnorderedList')">• Lista</button>
+                        <button class="editor-btn" type="button" onmousedown="event.preventDefault()"
+                            onclick="clearNotes()" title="Limpar Tudo" aria-label="Limpar Tudo">Limpar Tudo</button>
+                    </div>
+                    <div class="notes-editor is-empty" id="notesInput" contenteditable="true"
+                        onmousedown="keepEmptyCaretAtStart(event, this)" onfocus="placeCaretAtStart(this)"
+                        onclick="setTimeout(() => placeCaretAtStart(this), 0)"
+                        onmouseup="setTimeout(() => placeCaretAtStart(this), 0)" oninput="saveNotes()"
+                        onkeydown="autoFormatTyping(event)" onpaste="autoFormatPaste(event)"></div>
+                    <div class="save-status" id="saveStatus">Salvo automaticamente no navegador</div>
                 </div>
-                <div class="notes-editor" id="notesInput" contenteditable="true" oninput="saveNotes()"></div>
-                <div class="save-status" id="saveStatus">Salvo automaticamente no navegador</div>
             </div>
         </div>
     </div>
@@ -627,14 +920,21 @@
             const grad1 = shadeColor(hex, -15);
             const grad2 = shadeColor(hex, -30);
             document.documentElement.style.setProperty('--accent-color', hex);
+            document.documentElement.style.setProperty('--accent-light', `color-mix(in srgb, ${hex} 35%, white)`);
+            document.documentElement.style.setProperty('--accent-dark', shadeColor(hex, -38));
             document.documentElement.style.setProperty('--bg-grad-1', grad1);
             document.documentElement.style.setProperty('--bg-grad-2', grad2);
 
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                if (btn.classList.contains('active')) {
-                    btn.style.backgroundColor = hex;
-                }
-            });
+            const activeTab = document.querySelector('.tab-btn.active');
+            if (activeTab) moveTabIndicator(activeTab, hex);
+        }
+
+        function moveTabIndicator(button, color = '') {
+            const indicator = document.getElementById('tabIndicator');
+            if (!indicator || !button) return;
+            indicator.style.width = `${button.offsetWidth}px`;
+            indicator.style.transform = `translateX(${button.offsetLeft}px)`;
+            if (color) indicator.style.backgroundColor = color;
         }
 
         function setWheelColorFromPoint(x, y) {
@@ -665,9 +965,33 @@
         const colorPanel = document.getElementById('colorPanel');
         const colorWheel = document.getElementById('colorWheel');
         let draggingWheel = false;
+        let colorPanelCloseTimer = null;
+
+        function openColorPanel() {
+            clearTimeout(colorPanelCloseTimer);
+            colorPanel.classList.remove('hidden', 'is-closing');
+            colorPanel.classList.add('is-open');
+        }
+
+        function closeColorPanel() {
+            if (colorPanel.classList.contains('hidden') || colorPanel.classList.contains('is-closing')) return;
+            colorPanel.classList.remove('is-open');
+            colorPanel.classList.add('is-closing');
+            colorPanelCloseTimer = setTimeout(() => {
+                colorPanel.classList.remove('is-closing');
+                colorPanel.classList.add('hidden');
+            }, 180);
+        }
 
         paletteTrigger.addEventListener('click', () => {
-            colorPanel.classList.toggle('hidden');
+            if (colorPanel.classList.contains('is-open')) closeColorPanel();
+            else openColorPanel();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.palette-wrapper')) {
+                closeColorPanel();
+            }
         });
 
         colorWheel.addEventListener('pointerdown', (event) => {
@@ -690,12 +1014,14 @@
             draggingWheel = false;
         });
 
-        const defaultColor = '#f7b6c5';
+        const defaultColor = '#F28B8B';
         setWheelColorFromPoint(
-            colorWheel.getBoundingClientRect().left + colorWheel.offsetWidth * 0.75,
-            colorWheel.getBoundingClientRect().top + colorWheel.offsetHeight * 0.5
+            colorWheel.getBoundingClientRect().left + colorWheel.offsetWidth * 0.5,
+            colorWheel.getBoundingClientRect().top + 25
         );
         changeColor(defaultColor);
+
+        let tabTransitionId = 0;
 
         function swTab(tab) {
             const tabIds = {
@@ -706,23 +1032,68 @@
             };
             const tabs = Object.values(tabIds);
             const currentTab = tabIds[tab];
+            const stage = document.getElementById('tabStage');
+            const currentSection = document.getElementById(`${currentTab}-sec`);
+            const previousSection = tabs
+                .map(item => document.getElementById(`${item}-sec`))
+                .find(section => !section.classList.contains('hidden'));
 
-            if (!currentTab) return;
+            if (!currentTab || previousSection === currentSection) return;
 
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 btn.classList.remove('active');
-                btn.style.backgroundColor = 'transparent';
-                document.getElementById(`${t}-sec`).classList.add('hidden');
             });
             const currentBtn = document.getElementById(`tab-${currentTab}`);
             currentBtn.classList.add('active');
             const hex = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
-            currentBtn.style.backgroundColor = hex;
-            document.getElementById(`${currentTab}-sec`).classList.remove('hidden');
+            moveTabIndicator(currentBtn, hex);
+            tabs
+                .map(item => document.getElementById(`${item}-sec`))
+                .filter(section => section !== previousSection && section !== currentSection)
+                .forEach(section => section.classList.add('hidden'));
+
+            currentSection.classList.remove('hidden');
+            const transitionId = ++tabTransitionId;
+            if (!previousSection) {
+                currentSection.animate([
+                    { opacity: 0, transform: 'translateX(32px)' },
+                    { opacity: 1, transform: 'translateX(0)' }
+                ], { duration: 380, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
+                return;
+            }
+
+            stage.style.height = `${Math.max(previousSection.offsetHeight, currentSection.offsetHeight)}px`;
+            previousSection.classList.add('tab-slide-layer');
+            currentSection.classList.add('tab-slide-layer');
+
+            const leaving = previousSection.animate([
+                { opacity: 1, transform: 'translateX(0)' },
+                { opacity: 0, transform: 'translateX(-32px)' }
+            ], { duration: 380, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
+            const entering = currentSection.animate([
+                { opacity: 0, transform: 'translateX(32px)' },
+                { opacity: 1, transform: 'translateX(0)' }
+            ], { duration: 380, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' });
+
+            Promise.all([leaving.finished, entering.finished]).then(() => {
+                if (transitionId !== tabTransitionId) return;
+                previousSection.classList.add('hidden');
+                previousSection.classList.remove('tab-slide-layer');
+                currentSection.classList.remove('tab-slide-layer');
+                const targetHeight = currentSection.offsetHeight;
+                stage.style.height = `${targetHeight}px`;
+                setTimeout(() => {
+                    if (transitionId === tabTransitionId) stage.style.height = '';
+                }, 400);
+            });
         }
 
         function limitL(el) { if (el.value.length > 2) el.value = el.value.slice(0, 2); }
+
+        function updateTimerNumberColor(input) {
+            input.classList.toggle('number-has-value', input.value !== '' && Number(input.value) !== 0);
+        }
 
         let cStart = 0, cTime = 0, cInt, lapN = 0;
         function startC() {
@@ -775,6 +1146,9 @@
                 document.getElementById('t-hr').value = h > 0 ? String(h).padStart(2, '0') : "";
                 document.getElementById('t-min').value = String(m).padStart(2, '0');
                 document.getElementById('t-seg').value = String(s).padStart(2, '0');
+                updateTimerNumberColor(document.getElementById('t-hr'));
+                updateTimerNumberColor(document.getElementById('t-min'));
+                updateTimerNumberColor(document.getElementById('t-seg'));
                 tDur = (h * 3600 + m * 60 + s) * 1000;
             }
             if (tDur <= 0) return;
@@ -824,30 +1198,279 @@
             if (resetTimer) resetT();
         }
 
+        let todoTasks = [];
+        let todoTimerInterval = null;
+
+        function formatDuration(ms) {
+            const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            if (hours > 0) return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function saveTodoTasks() {
+            localStorage.setItem('focus_todo_tasks', JSON.stringify(todoTasks));
+        }
+
+        function toggleTaskTimer(taskId) {
+            const task = todoTasks.find(item => item.id === taskId);
+            if (!task) return;
+
+            if (task.running) {
+                task.elapsedMs += Date.now() - task.startedAt;
+                task.running = false;
+                task.startedAt = null;
+            } else {
+                task.running = true;
+                task.startedAt = Date.now();
+            }
+
+            saveTodoTasks();
+            renderTodoTasks();
+        }
+
+        function toggleTodo(taskId, checked) {
+            const task = todoTasks.find(item => item.id === taskId);
+            if (!task) return;
+            task.done = checked;
+            saveTodoTasks();
+            renderTodoTasks();
+        }
+
+        function removeTodo(taskId) {
+            const item = document.querySelector(`[data-task-id="${taskId}"]`);
+            const finishRemoval = () => {
+                todoTasks = todoTasks.filter(item => item.id !== taskId);
+                saveTodoTasks();
+                renderTodoTasks();
+            };
+
+            if (!item) {
+                finishRemoval();
+                return;
+            }
+
+            const height = item.getBoundingClientRect().height;
+            item.style.overflow = 'hidden';
+            item.style.pointerEvents = 'none';
+            const removalAnimation = item.animate([
+                {
+                    height: `${height}px`,
+                    opacity: 1,
+                    marginBottom: '10px',
+                    paddingTop: '14px',
+                    paddingBottom: '14px',
+                    transform: 'translateX(0) scale(1)'
+                },
+                {
+                    height: '0px',
+                    opacity: 0,
+                    marginBottom: '0px',
+                    paddingTop: '0px',
+                    paddingBottom: '0px',
+                    transform: 'translateX(12px) scale(0.98)'
+                }
+            ], {
+                duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 420,
+                easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                fill: 'forwards'
+            });
+            removalAnimation.onfinish = finishRemoval;
+        }
+
         function addTodo() {
             const input = document.getElementById('todoInput');
-            if (!input.value.trim()) return;
-            const item = document.createElement('div');
-            item.className = 'todo-item';
-            item.innerHTML = `<div class="todo-left"><input type="checkbox" onchange="toggleTodo(this)"><span class="todo-text">${input.value}</span></div><button class="btn-del" onclick="this.parentElement.remove()">✕</button>`;
-            document.getElementById('todoContainer').appendChild(item);
+            const value = input.value.trim();
+            if (!value) return;
+
+            const newTask = {
+                id: Date.now() + Math.random(),
+                text: value,
+                done: false,
+                elapsedMs: 0,
+                running: false,
+                startedAt: null
+            };
+            todoTasks.unshift(newTask);
+
             input.value = '';
+            saveTodoTasks();
+            renderTodoTasks(newTask.id);
         }
-        function toggleTodo(cb) { const p = cb.parentElement.parentElement; if (cb.checked) p.classList.add('done'); else p.classList.remove('done'); }
+
+        function renderTodoTasks(animatedTaskId = null) {
+            const container = document.getElementById('todoContainer');
+            container.innerHTML = '';
+
+            todoTasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `todo-item ${task.done ? 'done' : ''} ${task.id === animatedTaskId ? 'todo-adding' : ''}`;
+                item.dataset.taskId = task.id;
+                item.innerHTML = `
+                    <div class="todo-left">
+                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTodo(${task.id}, this.checked)">
+                        <div class="todo-main">
+                            <span class="todo-text">${task.text}</span>
+                            <span class="todo-timer">${formatDuration(task.elapsedMs + (task.running && task.startedAt ? Date.now() - task.startedAt : 0))}</span>
+                        </div>
+                    </div>
+                    <div class="todo-actions">
+                        <button class="todo-timer-btn" onclick="toggleTaskTimer(${task.id})">${task.running ? 'Pausar' : 'Iniciar'}</button>
+                        <button class="btn-del" onclick="removeTodo(${task.id})">✕</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function startTodoTimerLoop() {
+            if (todoTimerInterval) return;
+            todoTimerInterval = setInterval(() => {
+                const hasRunning = todoTasks.some(task => task.running);
+                if (!hasRunning) return;
+                renderTodoTasks();
+            }, 1000);
+        }
+
+        function loadTodoTasks() {
+            const saved = localStorage.getItem('focus_todo_tasks');
+            todoTasks = saved ? JSON.parse(saved) : [];
+            todoTasks = todoTasks.map(task => ({
+                ...task,
+                running: Boolean(task.running),
+                startedAt: task.running && task.startedAt ? Number(task.startedAt) : null,
+                elapsedMs: Number(task.elapsedMs || 0)
+            }));
+            renderTodoTasks();
+            startTodoTimerLoop();
+        }
+
+        function escapeHtml(text) {
+            const element = document.createElement('div');
+            element.textContent = text;
+            return element.innerHTML;
+        }
+
+        function autoFormatTyping(event) {
+            if (event.key !== ' ') return;
+            const selection = window.getSelection();
+            if (!selection || !selection.isCollapsed || !selection.anchorNode || selection.anchorNode.nodeType !== Node.TEXT_NODE) return;
+
+            const textBeforeCursor = selection.anchorNode.textContent.slice(0, selection.anchorOffset);
+            const lineStart = textBeforeCursor.lastIndexOf('\n') + 1;
+            const currentLine = textBeforeCursor.slice(lineStart);
+            const marker = currentLine.match(/^(#|-|\*|\d+[.)]) $/);
+            if (!marker) return;
+
+            event.preventDefault();
+            const markerLength = marker[0].length;
+            const range = document.createRange();
+            range.setStart(selection.anchorNode, selection.anchorOffset - markerLength);
+            range.setEnd(selection.anchorNode, selection.anchorOffset);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete');
+
+            if (marker[1] === '#') {
+                document.execCommand('formatBlock', false, 'h3');
+            } else {
+                document.execCommand(marker[1].match(/^\d/) ? 'insertOrderedList' : 'insertUnorderedList');
+            }
+            saveNotes();
+        }
+
+        function autoFormatPaste(event) {
+            const text = event.clipboardData?.getData('text/plain');
+            if (!text || !/^(\s*[-*]\s+|\s*\d+[.)]\s+)/m.test(text)) return;
+
+            event.preventDefault();
+            const lines = text.split(/\r?\n/);
+            let html = '';
+            let listType = null;
+
+            const closeList = () => {
+                if (listType) html += `</${listType}>`;
+                listType = null;
+            };
+
+            lines.forEach(line => {
+                const unordered = line.match(/^\s*[-*]\s+(.+)$/);
+                const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+                if (unordered || ordered) {
+                    const nextType = unordered ? 'ul' : 'ol';
+                    if (listType !== nextType) {
+                        closeList();
+                        listType = nextType;
+                        html += `<${listType}>`;
+                    }
+                    html += `<li>${escapeHtml((unordered || ordered)[1])}</li>`;
+                    return;
+                }
+
+                closeList();
+                if (line.trim()) html += `<p>${escapeHtml(line.trim())}</p>`;
+            });
+
+            closeList();
+            document.execCommand('insertHTML', false, html);
+            saveNotes();
+        }
+
+        function updateNotesPlaceholder() {
+            const notes = document.getElementById('notesInput');
+            notes.classList.toggle('is-empty', isNotesEmpty(notes));
+        }
+
+        function isNotesEmpty(editor) {
+            return editor.innerHTML.replace(/<br\s*\/?>(\s*)/gi, '').replace(/&nbsp;/gi, '').trim() === '';
+        }
+
+        function placeCaretAtStart(editor) {
+            if (!isNotesEmpty(editor)) return;
+            editor.innerHTML = '';
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.setStart(editor, 0);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
+        function keepEmptyCaretAtStart(event, editor) {
+            if (!isNotesEmpty(editor)) return;
+            event.preventDefault();
+            editor.focus();
+            setTimeout(() => placeCaretAtStart(editor), 0);
+        }
 
         function saveNotes() {
-            const htmlContent = document.getElementById('notesInput').innerHTML;
+            const notes = document.getElementById('notesInput');
+            const htmlContent = notes.innerHTML;
             localStorage.setItem('chronos_notes_html', htmlContent);
+            updateNotesPlaceholder();
         }
 
         function clearNotes() {
             const notes = document.getElementById('notesInput');
             notes.innerHTML = '';
             localStorage.removeItem('chronos_notes_html');
+            updateNotesPlaceholder();
             notes.focus();
+            placeCaretAtStart(notes);
         }
 
         function deletePreviousCharacter() {
+            const notes = document.getElementById('notesInput');
+            if (isNotesEmpty(notes)) {
+                notes.innerHTML = '';
+                notes.focus();
+                placeCaretAtStart(notes);
+                setTimeout(() => placeCaretAtStart(notes), 0);
+                return;
+            }
+
             const selection = window.getSelection();
             if (!selection || selection.rangeCount === 0) return;
 
@@ -864,9 +1487,12 @@
         window.onload = function () {
             const saved = localStorage.getItem('chronos_notes_html');
             if (saved) document.getElementById('notesInput').innerHTML = saved;
+            updateNotesPlaceholder();
+
+            loadTodoTasks();
 
             const hex = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
-            document.getElementById('tab-c').style.backgroundColor = hex;
+            moveTabIndicator(document.getElementById('tab-c'), hex);
         }
     </script>
 </body>
