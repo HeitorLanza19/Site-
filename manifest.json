@@ -3,33 +3,24 @@
   "name": "Foco Pomodoro - Timer",
   "icons": [
     {
-      "src": "https://i.imgur.com/YjcMDOt.png",
-      "sizes": "1024x1024",
+      "src": "/foco-pomodorologo.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://i.imgur.com/YjcMDOt.png",
+      "src": "/foco-pomodorologo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://i.imgur.com/YjcMDOt.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://i.imgur.com/YjcMDOt.png",
-      "sizes": "192x192",
+      "src": "/foco-pomodorologo.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
   ],
   "start_url": "/",
-  "background_color": "#000000",
-  "theme_color": "#2c2c2c",
-  "display": "standalone",
-  "orientation": "portrait"
+  "display": "standalone"
 }
