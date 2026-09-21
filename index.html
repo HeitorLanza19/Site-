@@ -864,6 +864,16 @@
         </div>
     </div>
     <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      // Usando caminho relativo para evitar erro 404 no Netlify
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker registrado com sucesso!', reg))
+        .catch(err => console.error('Erro ao registrar Service Worker:', err));
+    });
+  }
+</script>
+    <script>
         let wakeLock = null;
         async function reqLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { } }
         function relLock() { if (wakeLock !== null) { wakeLock.release(); wakeLock = null; } }
